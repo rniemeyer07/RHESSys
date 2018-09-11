@@ -1,6 +1,6 @@
-RHESSys - The Regional Hydro-Ecologic Simulation System
+RESSys - The Regional Hydro-Ecologic Simulation System
 =======================================================
-
+just try to make a change
 Github is the new home for the RHESSys code repository.
 
 The project homepage is at http://fiesta.bren.ucsb.edu/~rhessys/
