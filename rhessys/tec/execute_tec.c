@@ -188,6 +188,7 @@ void	execute_tec(
 	/*	Local Variable Definition. 									*/
 	/*--------------------------------------------------------------*/
 	int check;
+        int reset_flag;
 	long	day;
 	long	hour;
 	long	month;
@@ -199,7 +200,11 @@ void	execute_tec(
 	/*--------------------------------------------------------------*/
 	/*	Initialize the indices into the base station clime sequences*/
 	/*--------------------------------------------------------------*/
+<<<<<<< HEAD
         reset_flag = 1;
+=======
+	reset_flag = 0.0;
+>>>>>>> 2755b10729a3f330336dcb9ff5558312c4f4ba5f
 	year = 0;
 	month = 0;
 	day = 0;
@@ -265,21 +270,26 @@ void	execute_tec(
 			/*--------------------------------------------------------------*/
 			/*			Simulate the world for the start of this day e		*/
 			/*--------------------------------------------------------------*/
+
+
+//            if ( current_date.hour == 1 ) printf("\nCurrent_date year = %d mon = %d day = %d\r",
+                    // current_date.year,current_date.month,current_date.day);
+            //fflush(stdout);
 			if ( current_date.hour == 1 ){
-				world_daily_I(
+                world_daily_I(
 					day,
 					world,
 					command_line,
 					event,
-					current_date);
+                    current_date);
 			} /*end if*/
 			/*--------------------------------------------------------------*/
 			/*          Do hourly stuff for the day.                        */
 			/*--------------------------------------------------------------*/
-			world_hourly( world,
+            world_hourly( world,
 				command_line,
 				event,
-				current_date);
+                current_date);
 			
 			/*--------------------------------------------------------------*/
 			/*			Perform any requested hourly output					*/
@@ -312,12 +322,12 @@ void	execute_tec(
 				/*--------------------------------------------------------------*/
 				/*			Simulate the world for the end of this day e		*/
 				/*--------------------------------------------------------------*/
-				world_daily_F(
+                world_daily_F(
 					day,
 					world,
 					command_line,
 					event,
-					current_date);
+                    current_date);
 				/*--------------------------------------------------------------*/
 				/*			Perform any requested daily output					*/
 				/*--------------------------------------------------------------*/
@@ -349,8 +359,12 @@ void	execute_tec(
 				/*--------------------------------------------------------------*/
 				/*			Perform any requested yearly output					*/
 				/*--------------------------------------------------------------*/
+<<<<<<< HEAD
 				if (command_line[0].output_flags.yearly_growth == 1) {reset_flag=0;}
 
+=======
+				 if (command_line[0].output_flags.yearly_growth == 1) {reset_flag=0;}
+>>>>>>> 2755b10729a3f330336dcb9ff5558312c4f4ba5f
 				if ((command_line[0].output_flags.yearly == 1) &&
 					(command_line[0].output_yearly_date.month==current_date.month)&&
 					(command_line[0].output_yearly_date.day == current_date.day))
@@ -430,7 +444,7 @@ void	execute_tec(
 				/*--------------------------------------------------------------*/
 				/*				increment year  								*/
 				/*-------------------------------------------------------------*/
-				printf("Year %d\n", current_date.year);
+                printf("\nYear %d\n", current_date.year);
 				year = year + 1;
 				current_date.year= next_date.year;
 			}  /*end if*/

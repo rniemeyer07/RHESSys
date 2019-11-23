@@ -376,7 +376,12 @@ void		patch_daily_F(
 		int,
 		struct mortality_struct);
 	
-	
+
+	void	compute_fire_effects(
+		struct patch_object *,
+		double);
+
+
 
 	long julday( struct date);
 	/*--------------------------------------------------------------*/
@@ -386,8 +391,10 @@ void		patch_daily_F(
 	int stratum, ch, inx;
 	int	vegtype;
 	int dum;
+	double  pspread;
 	double  biomass_removal_percent;
-	double	cap_rise, tmp, wilting_point;
+	double	cap_rise, tmp, wilting_point, cap_rise_to_rz_storage, cap_rise_to_unsat;
+	double  rz_deficit, unsat_deficit;
 	double	delta_unsat_zone_storage;
 	double  infiltration, lhvap;
 	double	infiltration_ini;
@@ -417,6 +424,12 @@ void		patch_daily_F(
 	double PAR_direct_covered, PAR_diffuse_covered, PAR_direct_exposed, PAR_diffuse_exposed;
 	double snow_melt_covered, snow_melt_exposed;
 	double 	rz_drainage,unsat_drainage;
+	double prop_detention_store_infiltrated;
+	double	dayl_rad;
+	double	hr_rad;
+	double	adj_rad;
+	double	adj_hr;
+	double	adj_pct;
 	struct	canopy_strata_object	*strata;
 	struct	litter_object	*litter;
 	struct  dated_sequence	clim_event;
@@ -521,7 +534,42 @@ void		patch_daily_F(
 	if ( command_line[0].verbose_flag == -5 ){
 	printf("\nPATCH DAILY F:");
 	}
-	
+
+	/*--------------------------------------------------------------*/
+	/*	Adjust kdowns if multiscale routing is used					*/
+	/*--------------------------------------------------------------*/
+	// this could be a separate function
+	if (command_line[0].multiscale_flag == 1) {
+		
+		/* Compare horizons to patch family adjusted horizon */
+		if (patch[0].family_horizon > asin(zone[0].w_horizon) > 0 || patch[0].family_horizon > asin(zone[0].e_horizon) > 0) {
+			// 180 degrees = pi = 3.141593 rad
+			// day length/sky in radians - max() might not be needed
+			dayl_rad = PI - asin(zone[0].w_horizon) - asin(zone[0].e_horizon);
+			// 1 hr in radians
+			hr_rad = dayl_rad / (zone[0].metv.dayl / 3600);
+
+			if (command_line[0].verbose_flag == -6) printf("\n ----- Patch family shading ----- \n");
+			if (command_line[0].verbose_flag == -6) printf("| Day length hrs %f | E hor deg %f | W hor deg %f | day length radians %f | 1hr radians %f | \n", 
+				zone[0].metv.dayl / 3600, asin(zone[0].w_horizon) * (180 / PI), asin(zone[0].e_horizon) * (180 / PI), dayl_rad, hr_rad);
+
+			if ((patch[0].family_horizon - asin(zone[0].w_horizon)) + (patch[0].family_horizon - asin(zone[0].e_horizon)) > hr_rad) {
+				// day length/sky radians of patch family
+				adj_rad = PI - 2 * patch[0].family_horizon;
+				// patch family day length in hrs, rounded to nearest hr
+				adj_hr = round((zone[0].metv.dayl / 3600) * adj_rad/dayl_rad);
+				if (command_line[0].verbose_flag == -6) printf("| Horizon radians %f -> %f | Daylight hrs %f -> %f |\n", dayl_rad, adj_rad, zone[0].metv.dayl / 3600, adj_hr);
+				// pct to adjust kdowns by
+				adj_pct = pow(((zone[0].metv.dayl / 3600) - adj_hr) / (zone[0].metv.dayl / 3600), 1.5);
+
+				if (command_line[0].verbose_flag == -6) printf("| Pct reduction %f | Kdown direct %f -> %f | Kdown diffuse %f -> %f |\n", 
+					adj_pct, patch[0].Kdown_direct, patch[0].Kdown_direct * (1 - adj_pct), patch[0].Kdown_diffuse, patch[0].Kdown_diffuse * (1 - adj_pct));
+				patch[0].Kdown_direct *= (1 - adj_pct);
+				patch[0].Kdown_diffuse *= (1 - adj_pct);
+			}
+		}
+	} /* end MSR patch family shading */
+
 	/*--------------------------------------------------------------*/
 	/*	Set the patch rain and snow throughfall equivalent to the	*/
 	/*	rain and snow coming down over the zone.					*/
@@ -613,17 +661,17 @@ void		patch_daily_F(
 				clim_event = patch[0].base_stations[0][0].dated_input[0].biomass_removal_percent.seq[inx];
 				}
 			if ((clim_event.edate.year != 0) && ( julday(clim_event.edate) == julday(current_date)) ) {
-					biomass_removal_percent = clim_event.value;
-					mort.mort_cpool=biomass_removal_percent;
-					mort.mort_leafc=biomass_removal_percent;
-					mort.mort_deadleafc=biomass_removal_percent;
-					mort.mort_deadstemc=biomass_removal_percent;
-					mort.mort_livestemc=biomass_removal_percent;
-					mort.mort_deadcrootc=biomass_removal_percent;
-					mort.mort_livecrootc=biomass_removal_percent;
-					mort.mort_frootc=biomass_removal_percent;
+				biomass_removal_percent = clim_event.value;
+				mort.mort_cpool=biomass_removal_percent;
+				mort.mort_leafc=biomass_removal_percent;
+				mort.mort_deadleafc=biomass_removal_percent;
+				mort.mort_deadstemc=biomass_removal_percent;
+				mort.mort_livestemc=biomass_removal_percent;
+				mort.mort_deadcrootc=biomass_removal_percent;
+				mort.mort_livecrootc=biomass_removal_percent;
+				mort.mort_frootc=biomass_removal_percent;
 					
-					for ( layer=0 ; layer<patch[0].num_layers; layer++ ){
+				for ( layer=0 ; layer<patch[0].num_layers; layer++ ){
 					/*--------------------------------------------------------------*/
 					/*	Cycle through the canopy strata				*/
 					/*--------------------------------------------------------------*/
@@ -644,9 +692,34 @@ void		patch_daily_F(
 
 					}
 				}
+			}
+		} 
+	}
 
+
+	/*--------------------------------------------------------------*/
+	/* call fire effects on a particular date, based  		*/
+	/* on time series input						*/
+	/*--------------------------------------------------------------*/
+	if (patch[0].base_stations != NULL) {
+		inx = patch[0].base_stations[0][0].dated_input[0].pspread.inx;
+		if (inx > -999) {
+			clim_event = patch[0].base_stations[0][0].dated_input[0].pspread.seq[inx];
+			while (julday(clim_event.edate) < julday(current_date)) {
+				patch[0].base_stations[0][0].dated_input[0].pspread.inx += 1;
+				inx = patch[0].base_stations[0][0].dated_input[0].pspread.inx;
+				clim_event = patch[0].base_stations[0][0].dated_input[0].pspread.seq[inx];
 				}
-			} 
+			if ((clim_event.edate.year != 0) && ( julday(clim_event.edate) == julday(current_date)) ) {
+				pspread = clim_event.value;
+
+				printf("\n Implementing fire effects with a pspread of %f in patch %d\n", pspread, patch[0].ID);
+				compute_fire_effects(
+					patch,
+					pspread);
+
+			}
+		} 
 	}
 
 
@@ -750,6 +823,7 @@ void		patch_daily_F(
 						command_line,
 						event,
 						current_date );
+				
 				dum += 1;
 			}
 			patch[0].Kdown_direct = patch[0].Kdown_direct_final;
@@ -1376,7 +1450,10 @@ void		patch_daily_F(
 		/*--------------------------------------------------------------*/
 		/* now take infiltration out of detention store 	*/
 		/*--------------------------------------------------------------*/
-		
+
+		if (infiltration > ZERO)	
+			prop_detention_store_infiltrated = infiltration/patch[0].detention_store;	
+
 		patch[0].detention_store -= infiltration;
 			/*--------------------------------------------------------------*/
 			/*	Determine if the infifltration will fill up the unsat	*/
@@ -1399,6 +1476,30 @@ void		patch_daily_F(
 		}
 		
 		patch[0].recharge = infiltration;
+
+		/*--------------------------------------------------------------*/
+		/* added an surface N flux to surface N pool	and		*/
+		/* allow infiltration of surface N				*/
+		/*--------------------------------------------------------------*/
+		if ((command_line[0].grow_flag > 0) && (infiltration > ZERO)) {
+			patch[0].soil_ns.DON += ((infiltration
+					/ prop_detention_store_infiltrated) * patch[0].surface_DON);
+			patch[0].soil_cs.DOC += ((infiltration
+					/ prop_detention_store_infiltrated) * patch[0].surface_DOC);
+			patch[0].soil_ns.nitrate += ((infiltration
+					/ prop_detention_store_infiltrated) * patch[0].surface_NO3);
+			patch[0].surface_NO3 -= ((infiltration
+					/ prop_detention_store_infiltrated) * patch[0].surface_NO3);
+			patch[0].soil_ns.sminn += ((infiltration
+					/ prop_detention_store_infiltrated) * patch[0].surface_NH4);
+			patch[0].surface_NH4 -= ((infiltration
+					/ prop_detention_store_infiltrated) * patch[0].surface_NH4);
+			patch[0].surface_DOC -= ((infiltration
+							/ prop_detention_store_infiltrated) * patch[0].surface_DOC);
+			patch[0].surface_DON -= ((infiltration
+							/ prop_detention_store_infiltrated) * patch[0].surface_DON);
+				}
+
 	} // end if hourly rain flag			
 	/*--------------------------------------------------------------*/
 	/*	Calculate patch level transpiration			*/
@@ -1690,21 +1791,35 @@ void		patch_daily_F(
 
 	/*--------------------------------------------------------------*/
 	/*	fill the leftover demand with cap rise.			*/
+	/*	first fill unsat storage (if unsat below rooting zone exists */
+	/*     fill to field capacity with cap_rise */
+	/*     then allow water to move to rooting zone storage */
 	/*--------------------------------------------------------------*/
-	cap_rise = max(min(patch[0].potential_cap_rise, min(unsat_zone_patch_demand, water_below_field_cap)), 0.0);
-	cap_rise = min((compute_delta_water(
-			0, 
-			patch[0].soil_defaults[0][0].porosity_0,
-			patch[0].soil_defaults[0][0].porosity_decay,
-			patch[0].soil_defaults[0][0].soil_depth,
-			patch[0].soil_defaults[0][0].soil_depth,
-			patch[0].sat_deficit_z)), cap_rise);
-	
-	cap_rise = min(cap_rise, unsat_zone_patch_demand);
-	unsat_zone_patch_demand -= cap_rise;
-	patch[0].cap_rise += cap_rise;
-	patch[0].potential_cap_rise -= cap_rise;
-	patch[0].sat_deficit += cap_rise;				
+ 	if (patch[0].sat_deficit_z >= patch[0].rootzone.depth ){
+  		unsat_deficit = patch[0].field_capacity-patch[0].unsat_storage;
+		unsat_deficit = max(0.0, unsat_deficit);
+        	if (patch[0].rootzone.potential_sat > patch[0].rz_storage) 
+			rz_deficit = patch[0].rootzone.potential_sat - patch[0].rz_storage;
+		else  rz_deficit=0;
+	}
+   	else {
+       		 unsat_deficit = 0.0;
+        	if (patch[0].sat_deficit > patch[0].rz_storage){
+			rz_deficit = patch[0].sat_deficit - patch[0].rz_storage;
+		}
+		else  {rz_deficit=0.0;}
+    	}
+
+	cap_rise_to_unsat = min(patch[0].potential_cap_rise, unsat_deficit);
+	patch[0].unsat_storage += cap_rise_to_unsat;
+	cap_rise_to_rz_storage = min(patch[0].potential_cap_rise-cap_rise_to_unsat, unsat_zone_patch_demand);
+	cap_rise_to_rz_storage = min(rz_deficit, cap_rise_to_rz_storage);
+	patch[0].rz_storage +- cap_rise_to_rz_storage;
+
+	patch[0].cap_rise = (cap_rise_to_unsat + cap_rise_to_rz_storage);
+	patch[0].potential_cap_rise -= patch[0].cap_rise;
+	patch[0].sat_deficit += patch[0].cap_rise;				
+
 	/*--------------------------------------------------------------*/
 	/*	Now supply the remaining demand with water left in	*/
 	/*	the unsat zone.  We are going below field cap now!!	*/
@@ -1727,7 +1842,16 @@ void		patch_daily_F(
 	unsat_zone_patch_demand -= delta_unsat_zone_storage;			
 
 	/*--------------------------------------------------------------*/
-	
+	/* move nitrogen with cap rise 					*/
+	/* we don't do this yet as we do not movve nitrate from unsat to sat stores */
+	/*--------------------------------------------------------------*/
+ 	available_sat_water = compute_delta_water(
+                command_line[0].verbose_flag,
+                patch[0].soil_defaults[0][0].porosity_0,
+                patch[0].soil_defaults[0][0].porosity_decay,
+                patch[0].soil_defaults[0][0].soil_depth,
+                patch[0].soil_defaults[0][0].soil_depth, patch[0].sat_deficit_z);	
+		
 	/*--------------------------------------------------------------*/
 	/* 	Resolve plant uptake and soil microbial N demands	*/
 	/*--------------------------------------------------------------*/
@@ -2074,6 +2198,7 @@ void		patch_daily_F(
 		patch[0].fire.pet = (patch[0].fire_defaults[0][0].ndays_average*patch[0].fire.pet    
 				+ patch[0].PET) / 
 		(patch[0].fire_defaults[0][0].ndays_average + 1);
+
 		}
 	
 

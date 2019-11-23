@@ -49,10 +49,18 @@ RHESSysPreprocess = function(template,
                              asprules = NULL,
                              header = FALSE,
                              meta = FALSE,
+<<<<<<< HEAD
                              wrapper = TRUE,
                              parallel = FALSE,
                              d4 = FALSE,
                              make_stream = 4) {
+=======
+                             unique_strata_ID = TRUE,
+                             parallel = TRUE,
+                             d4 = FALSE,
+                             make_stream = 4,
+                             wrapper = TRUE) {
+>>>>>>> 2755b10729a3f330336dcb9ff5558312c4f4ba5f
 
   # ---------- Check Inputs ----------
   if (!file.exists(template)) { # check if template exists
@@ -73,7 +81,11 @@ RHESSysPreprocess = function(template,
   }
   name_clean = file.path(dirname(name), basename)
   worldfile = name_clean
+<<<<<<< HEAD
   cfname = name_clean
+=======
+  flownet_name = name_clean
+>>>>>>> 2755b10729a3f330336dcb9ff5558312c4f4ba5f
 
   if (!dir.exists(dirname(name))) { # check if output dir exists, menu to create
     t = menu(
@@ -113,8 +125,13 @@ RHESSysPreprocess = function(template,
                             typepars = typepars,
                             overwrite = overwrite,
                             header = header,
+<<<<<<< HEAD
                             asprules = asprules,
                             wrapper = wrapper)
+=======
+                            unique_strata_ID = unique_strata_ID,
+                            asprules = asprules)
+>>>>>>> 2755b10729a3f330336dcb9ff5558312c4f4ba5f
 
   readin = world_gen_out[[1]]
   asp_list = world_gen_out[[2]]
@@ -122,16 +139,26 @@ RHESSysPreprocess = function(template,
   # ---------- Run CreateFlownet ----------
   print("Begin CreateFlownet.R",quote = FALSE)
 
+<<<<<<< HEAD
   if (file.exists(cfname) & overwrite == FALSE) { # check for flownet overwrite
     t = menu(c("Yes", "No [Exit]"), title = noquote(paste(
       "Flowtable", cfname, "already exists. Overwrite?"
+=======
+  if (file.exists(flownet_name) & overwrite == FALSE) { # check for flownet overwrite
+    t = menu(c("Yes", "No [Exit]"), title = noquote(paste(
+      "Flowtable", flownet_name, "already exists. Overwrite?"
+>>>>>>> 2755b10729a3f330336dcb9ff5558312c4f4ba5f
     )))
     if (t == 2) {
       stop("RHESSysPreprocess.R exited without completing")
     }
   }
 
+<<<<<<< HEAD
   CreateFlownet(name = cfname,
+=======
+  CreateFlownet(flownet_name = flownet_name,
+>>>>>>> 2755b10729a3f330336dcb9ff5558312c4f4ba5f
                 readin = readin,
                 type = type,
                 typepars = typepars,
@@ -151,7 +178,11 @@ RHESSysPreprocess = function(template,
   #   build_meta(
   #     name = name_clean,
   #     world = worldfile,
+<<<<<<< HEAD
   #     flow = cfname,
+=======
+  #     flow = flownet_name,
+>>>>>>> 2755b10729a3f330336dcb9ff5558312c4f4ba5f
   #     template = template,
   #     type = type,
   #     typepars = typepars,

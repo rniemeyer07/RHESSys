@@ -48,6 +48,7 @@ int	 valid_option( char *command_line){
 		(strcmp(command_line,"-p")  == 0) ||
 		(strcmp(command_line,"-g")  == 0) ||
 		(strcmp(command_line,"-c")  == 0) ||
+		(strcmp(command_line,"-f")  == 0) ||
 		(strcmp(command_line,"-o")  == 0) ||
 		(strcmp(command_line,"-w")  == 0) ||
 		(strcmp(command_line,"-r")  == 0) ||
@@ -76,13 +77,15 @@ int	 valid_option( char *command_line){
 		(strcmp(command_line,"-firespread") == 0) ||
 		(strcmp(command_line,"-snowdistb") == 0) ||
 		(strcmp(command_line,"-whdr") == 0) ||
+		(strcmp(command_line,"-netcdf") == 0) ||
 		(strcmp(command_line,"-climrepeat") == 0) ||
 
 		(strcmp(command_line,"-template") == 0) ||
 		(strcmp(command_line,"-fs") == 0) ||
 
 		(strcmp(command_line,"-vegspinup") == 0) ||
-		(strcmp(command_line,"-template") == 0))
+		(strcmp(command_line,"-template") == 0) ||
+		(strcmp(command_line,"-msr") == 0))
 
 		i = 0;
 	if ( i == 0 ){

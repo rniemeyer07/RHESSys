@@ -1,7 +1,12 @@
 #' CreateFlownet
 #'
+<<<<<<< HEAD
 #' Creates the flow network used by RHESSys
 #' @param name The name of the flow network file to be created.  Will be coerced to have ".flow" extension if not already present.
+=======
+#' Creates the flow networkd table used by RHESSys
+#' @param flownet_name The name of the flow network file to be created.  Will be coerced to have ".flow" extension if not already present.
+>>>>>>> 2755b10729a3f330336dcb9ff5558312c4f4ba5f
 #' @param readin readin indicates which maps to be used. If CreateFlowmet.R is run it's own, this should point to the template. Otherwise,
 #' if run inside of RHESSysPreprocess, readin will use the map data from world_gen.R, Streams map, and other optional maps, still need to
 #' be specified.
@@ -30,7 +35,11 @@
 #' @export
 
 
+<<<<<<< HEAD
 CreateFlownet = function(name,
+=======
+CreateFlownet = function(flownet_name,
+>>>>>>> 2755b10729a3f330336dcb9ff5558312c4f4ba5f
                          readin = NULL,
                          type = "raster",
                          typepars = NULL,
@@ -42,21 +51,36 @@ CreateFlownet = function(name,
                          impervious = NULL,
                          roofs = NULL,
                          wrapper = FALSE,
+<<<<<<< HEAD
                          parallel = FALSE,
+=======
+                         parallel = TRUE,
+>>>>>>> 2755b10729a3f330336dcb9ff5558312c4f4ba5f
                          make_stream = 4,
                          d4 = FALSE){
 
   # ------------------------------ Read and check inputs ------------------------------
+<<<<<<< HEAD
   cfbasename = basename(name) # Coerce .flow extension
+=======
+  cfbasename = basename(flownet_name) # Coerce .flow extension
+>>>>>>> 2755b10729a3f330336dcb9ff5558312c4f4ba5f
   if (startsWith(cfbasename,"Flow.") | startsWith(cfbasename,"flow.")) {
     cfbasename = paste(substr(cfbasename,6,nchar(cfbasename)),".flow",sep = "")
   } else if (!endsWith(cfbasename,".flow")) {
     cfbasename = paste(cfbasename,".flow",sep = "")
   }
+<<<<<<< HEAD
   name = file.path(dirname(name),cfbasename)
 
   if (!is.logical(overwrite)) {stop("overwrite must be logical")} # check overwrite inputs
   if (file.exists(name) & overwrite == FALSE) {stop(noquote(paste("Flowtable",name,"already exists.")))}
+=======
+  flownet_name = file.path(dirname(flownet_name),cfbasename)
+
+  if (!is.logical(overwrite)) {stop("overwrite must be logical")} # check overwrite inputs
+  if (file.exists(flownet_name) & overwrite == FALSE) {stop(noquote(paste("Flowtable",flownet_name,"already exists.")))}
+>>>>>>> 2755b10729a3f330336dcb9ff5558312c4f4ba5f
 
   if (!wrapper & is.character(readin)) { #if run outside of rhessyspreprocess.R, and if readin is character. readin is the template (and path)
     template_list = template_read(template)
@@ -107,6 +131,10 @@ CreateFlownet = function(name,
   # Roads
   raw_road_data = NULL
   if (!is.null(roads)) {raw_road_data = map_ar_clean[, ,cfmaps[cfmaps[,1] == "roads",2]]}
+<<<<<<< HEAD
+=======
+
+>>>>>>> 2755b10729a3f330336dcb9ff5558312c4f4ba5f
   # Roofs and impervious is not yet implemented - placeholders for now -----
   if (!is.null(roofs) | !is.null(impervious)) {print("Roofs and impervious are not yet working",quote = FALSE)}
   raw_roof_data = NULL
@@ -137,6 +165,7 @@ CreateFlownet = function(name,
 
   # ------------------------------ Multiscale routing/aspatial patches ------------------------------
   if (!is.null(asp_list)) {
+<<<<<<< HEAD
     # import: existing flownet, asp/rule map, rule list with proportionate areas
     asp_map = map_ar_clean[, ,cfmaps[cfmaps[,1] == "asp_rule",2]]
     patch_ID = unlist(lapply(CF1, "[[",9)) # patch IDs from cf1
@@ -202,5 +231,15 @@ CreateFlownet = function(name,
   make_flow_table(flw = CF1, output_file = name, parallel = parallel)
 
   print(paste("Created flowtable:",name),quote = FALSE)
+=======
+    CF1 = multiscale_flow(CF1 = CF1, map_ar_clean = map_ar_clean, cfmaps = cfmaps, asp_list = asp_list)
+  }
+
+  # ---------- Flownet list to flow table file ----------
+  print("Writing flowtable",quote = FALSE)
+  make_flow_table(flw = CF1, output_file = flownet_name, parallel = parallel)
+
+  print(paste("Created flowtable:",flownet_name),quote = FALSE)
+>>>>>>> 2755b10729a3f330336dcb9ff5558312c4f4ba5f
 
 }
