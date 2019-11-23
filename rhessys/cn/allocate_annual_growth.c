@@ -517,8 +517,6 @@ int allocate_annual_growth(				int id,
 	else  {
 		 // cs->num_resprout = max(cs->num_resprout-1,0);	
 		 cs->age = cs->age + 1.0;
-<<<<<<< HEAD
-=======
 		 cs->leafc_age2 = cs->leafc;
 		 cs->leafc_age1 = 0.0;
 		 if (cs->age > 10000000.0) { 
@@ -526,7 +524,6 @@ int allocate_annual_growth(				int id,
 						cs->age);
 				cs->age=1.0;
 			}
->>>>>>> 2755b10729a3f330336dcb9ff5558312c4f4ba5f
 		 }
 
 	/* update states variables */

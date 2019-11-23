@@ -486,11 +486,7 @@ void input_new_strata(
 			canopy_strata[0].epv.wstress_days = 0;
 			canopy_strata[0].epv.max_fparabs = 0.0;
 			canopy_strata[0].epv.min_vwc = 1.0;
-<<<<<<< HEAD
-			//canopy_strata[0].cs.age = 0;
-=======
 		//	canopy_strata[0].cs.age = 0;
->>>>>>> 2755b10729a3f330336dcb9ff5558312c4f4ba5f
 			canopy_strata[0].cs.num_resprout = 0;
 		}
 		/*--------------------------------------------------------------*/

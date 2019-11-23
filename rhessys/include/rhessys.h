@@ -2235,11 +2235,7 @@ struct cstate_struct
 {
         int     num_resprout; /* (num years) running index of years of resprouting */   
     
-<<<<<<< HEAD
-    double    age; /* (num years) */
-=======
     double  age; /* (num years) */
->>>>>>> 2755b10729a3f330336dcb9ff5558312c4f4ba5f
     double mortality_fract;   /* percentage lost to carbonhydrate storage mortality this year */
     double preday_totalc;   /* (kgC/m2) previous days plant carbon total */
     double totalc;          /* (kgC/m2) previous days plant carbon total */

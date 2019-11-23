@@ -200,11 +200,7 @@ void	execute_tec(
 	/*--------------------------------------------------------------*/
 	/*	Initialize the indices into the base station clime sequences*/
 	/*--------------------------------------------------------------*/
-<<<<<<< HEAD
-        reset_flag = 1;
-=======
 	reset_flag = 0.0;
->>>>>>> 2755b10729a3f330336dcb9ff5558312c4f4ba5f
 	year = 0;
 	month = 0;
 	day = 0;
@@ -359,12 +355,7 @@ void	execute_tec(
 				/*--------------------------------------------------------------*/
 				/*			Perform any requested yearly output					*/
 				/*--------------------------------------------------------------*/
-<<<<<<< HEAD
-				if (command_line[0].output_flags.yearly_growth == 1) {reset_flag=0;}
-
-=======
 				 if (command_line[0].output_flags.yearly_growth == 1) {reset_flag=0;}
->>>>>>> 2755b10729a3f330336dcb9ff5558312c4f4ba5f
 				if ((command_line[0].output_flags.yearly == 1) &&
 					(command_line[0].output_yearly_date.month==current_date.month)&&
 					(command_line[0].output_yearly_date.day == current_date.day))

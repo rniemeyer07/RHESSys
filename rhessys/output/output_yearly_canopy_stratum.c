@@ -64,10 +64,6 @@ void	output_yearly_canopy_stratum( int basinID, int hillID,
 	/*--------------------------------------------------------------*/
 	/*	reset accumulator variables				*/
 	/*--------------------------------------------------------------*/
-<<<<<<< HEAD
-
-=======
->>>>>>> 2755b10729a3f330336dcb9ff5558312c4f4ba5f
 	if (reset_flag == 1) {
 	stratum[0].acc_year.psn = 0.0;
 	stratum[0].acc_year.lwp = 0.0;
